@@ -34,6 +34,12 @@ public class HyperPrison extends JavaPlugin implements Listener {
 	public static boolean allowPlayerJoin = false;
 	public static boolean allowJoinWithoutDatabase;
 
+	//TODO: Add storage alternatives (YAML/SQL)
+	//NOTE: 
+	//     0 = YAML Configuration Files
+	//     1 = MySQL Database
+	public int storageMethod = 0;
+	
 	
 	public static HyperPrison get()
 	{
