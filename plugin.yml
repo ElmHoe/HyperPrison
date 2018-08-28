@@ -1,0 +1,6 @@
+name: HyperPrison
+main: uk.co.ElmHoe.Prison.HyperPrison
+version: 0.1
+author: ElmHoe
+load: POSTWORLD
+depend: [PermissionsEx,Vault]
