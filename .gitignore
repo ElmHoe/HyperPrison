@@ -1,2 +1,5 @@
 config.yml
 /bin/*
+.settings/
+.classpath
+.project
