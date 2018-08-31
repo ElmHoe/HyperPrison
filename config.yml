@@ -1,10 +1,10 @@
-header: "&6&lHyper&f&lCloud&6&lMC &7&l>"
+header: "§7§k|§7§l[§6§lHyper§f§lPrison§7§l]§7§k| §6> "
 config:
    Database:
       allowJoinOnNoConnect: true
-      server: jdbc:mysql://192.168.0.33:3306/HyperPrison
-      user: java.prison
-      password: mqJz6W5qT9
+      server: "jdbc:mysql://192.168.0.33:3306/HyperPrison"
+      user: fake.user
+      password: notarealpass
       databaseName: HyperPrison
       tableName: PlayerData
       columns:

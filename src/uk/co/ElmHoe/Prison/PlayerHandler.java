@@ -12,19 +12,7 @@ import uk.co.ElmHoe.Prison.Database.Database;
 
 public class PlayerHandler implements Listener{
 
-/*	@EventHandler(priority = EventPriority.MONITOR)
-	public void onPrePlayerJoin(AsyncPlayerPreLoginEvent e)
-	{
-		if (HyperPrison.allowPlayerJoin() == false)
-		{
-			Bukkit.getLogger().info("test123");
-			e.disallow(Result.KICK_OTHER, "Sorry, please wait for the database to connect before joining...");;
-			e.setLoginResult(Result.KICK_OTHER);
-			Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "Denied Player from Joining AsyncPreLogin: " + e.getName() + ", MySQL not Loaded!");
-
-		}
-	}
-*/	
+	
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerLogin(PlayerLoginEvent e)
 	{

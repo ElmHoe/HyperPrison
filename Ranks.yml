@@ -1,0 +1,14 @@
+#Ranks being all ranks, with the name matching against it
+Ranks:
+#   Example rank, the name will be the next sub-heading
+    a-rank:
+#       default: true/false, is this the starting rank?
+        default: true
+#       priority: in the /rankup system, where would this fit?
+        priority: 1
+#       rewardType: "COMMAND" or "MONEY", more to come for this
+        rewardType: "COMMAND"
+#       reward: "/give <PLAYER> 2000", ";" seperated for multiple commands
+        reward: "/give <PLAYER> 2000;/msg <PLAYER> Congratulations on Ranking up!"
+#       rankmessage: rank message will be the specific rankup message, however, there is also a default message in config.yml
+        rankmessage: "Congratulations <PLAYER> on Ranking up to <RANK>!"

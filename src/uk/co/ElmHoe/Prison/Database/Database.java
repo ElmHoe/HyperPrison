@@ -20,46 +20,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import uk.co.ElmHoe.Prison.HyperPrison;
+import uk.co.ElmHoe.Prison.Utilities.ConfigUtility;
 
 
 public class Database {
-	
-	public Database(){
-		dbName = "db";
-		tableName = "PlayerData";
-		sqlTemplate = "CREATE TABLE IF NOT EXISTS {TABLENAME}  (" +
-				"PlayerID INT NOT NULL AUTO_INCREMENT," +
-				"PlayerLastKnownName VARCHAR(64)," +
-				"PlayerLastJoinDate DATETIME,"+
-				"PlayerJoinCount INT," +
-				"PlayerJoinDate DATETIME," +
-				"PlayerEmail VARCHAR(64)," +
-			    "PlayerUUID VARCHAR(60)," +
-				"primary KEY (PlayerID));";
-		
-			Bukkit.getScheduler().runTaskLaterAsynchronously(HyperPrison.get(), new Runnable() {
-		    @Override
-		    public void run() {
-		    	try{
-				HyperPrison.getMySQL();
-				Database.connected = Database.init();
-		    	}catch(Exception e){
-		    		e.printStackTrace();
-					
-				}
-				if(Database.connected){
-					HyperPrison.setPlayerJoin(true);
-					Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "MySQL successfully connected!");
-				}else{
-					if(HyperPrison.allowJoinWithoutDatabase){
-						HyperPrison.setPlayerJoin(true);
-					}
-					Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "MySQL was not able to connect to server!");
-				}
-		    }
-		}, 20);
-	}
-	
 	public static Connection connection = null;
 	
 	private static String dbName;
@@ -72,6 +36,45 @@ public class Database {
 	private static String sql;
 	private static String sqlTemplate;
 	public static Database plugin;
+
+	public Database(){
+		dbName = "db";
+		tableName = "PlayerData";
+		sqlTemplate = "CREATE TABLE IF NOT EXISTS {TABLENAME}  (" +
+				"PlayerID INT NOT NULL AUTO_INCREMENT," +
+				"PlayerLastKnownName VARCHAR(64)," +
+				"PlayerLastJoinDate DATETIME,"+
+				"PlayerJoinCount INT," +
+				"PlayerJoinDate DATETIME," +
+				"PlayerEmail VARCHAR(64)," +
+			    "PlayerUUID VARCHAR(60)," +
+				"primary KEY (PlayerID));";
+		/*
+		 * THE URL CANNOT BE NULL
+		 * fix this, ive had enough fml
+		 */
+			Bukkit.getScheduler().runTaskLaterAsynchronously(HyperPrison.plugin, new Runnable() {
+		    @Override
+		    public void run() {
+		    	try{
+				connected = init();
+		    	}catch(Exception e){
+		    		e.printStackTrace();
+					
+				}
+				if(Database.connected){
+					HyperPrison.setPlayerJoin(true);
+					Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "MySQL successfully connected!");
+				}else{
+					if(HyperPrison.allowJoinOnNoConnect){
+						HyperPrison.setPlayerJoin(true);
+					}
+					Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "MySQL was not able to connect to server!");
+				}
+		    }
+		}, 20);
+	}
+	
 
 	
 	public PlayerData getPlayer(UUID uuid) throws SQLException{
@@ -117,12 +120,11 @@ public class Database {
 	
 	public static boolean init(){
 		boolean worked = true;
-		HyperPrison.get();
-		dbName = HyperPrison.config.getString("config.Database.databaseName");
-		tableName = HyperPrison.config.getString("config.Database.tableName");
-		user = HyperPrison.config.getString("config.Database.user");
-		password = HyperPrison.config.getString("config.Database.password");
-		url = HyperPrison.config.getString("config.Database.server");	
+		dbName = ConfigUtility.config.getString("config.Database.databaseName");
+		tableName = ConfigUtility.config.getString("config.Database.tableName");
+		user = ConfigUtility.config.getString("config.Database.user");
+		password = ConfigUtility.config.getString("config.Database.password");
+		url = ConfigUtility.config.getString("config.Database.server");	
 		sql = sqlTemplate.replace("{TABLENAME}", "" + tableName);
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
@@ -165,8 +167,7 @@ public class Database {
 	
 	public void disable(){
 		close();
-		HyperPrison.get();
-		HyperPrison.config.set("config.Database.columns", columns);
+		ConfigUtility.config.set("config.Database.columns", columns);
 	}
 	
 	private void close() {
