@@ -13,7 +13,8 @@ import uk.co.ElmHoe.Prison.Database.Database;
 import uk.co.ElmHoe.Prison.Utilities.ConfigUtility;
 
 
-public class HyperPrison extends JavaPlugin implements Listener {
+public class HyperPrison extends JavaPlugin implements Listener
+{
 
 	public static String header = "§7§k|§7§l[§6§lHyper§f§lPrison§7§l]§7§k| §6> ";
 	public String version = "";
@@ -41,28 +42,30 @@ public class HyperPrison extends JavaPlugin implements Listener {
 		allowPlayerJoin = false;
 		Bukkit.getConsoleSender().sendMessage(header + "Running version: " + getVersion());
 		plugin = this;
+		setupCmd();
 		//We attempt to load the config file...
-		try {
+		try
+		{
 			ConfigUtility.loadConfigurationFiles();
 		} catch (IOException | InvalidConfigurationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		database = new Database();
 		
-		if (getServer().getPluginManager().getPlugin("PermissionsEx") != null) {
+		if (getServer().getPluginManager().getPlugin("PermissionsEx") != null)
+		{
 			isPexLoaded = true;
 		    Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "Detected PermissionsEx!");
 		}
 		
-		if (!setupEconomy()) {
+		if (!setupEconomy())
+		{
 			isVaultLoaded = false;
 	    	Bukkit.getConsoleSender().sendMessage(header + ChatColor.RED + "Vault not loaded, Using built in economy support!");
         }else{
         	isVaultLoaded = true;
         	Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "Hooked into Vault!");
         }		
-		
 	}
 	
 	public void onDisable()
@@ -70,34 +73,43 @@ public class HyperPrison extends JavaPlugin implements Listener {
 		
 	}
 	
+	public void safeReload()
+	{
+		
+	}
+	
 	public void registerAllEvents()
 	{
 		Bukkit.getPluginManager().registerEvents(new uk.co.ElmHoe.Prison.PlayerHandler(), this);
-		
+		Bukkit.getPluginManager().registerEvents(new uk.co.ElmHoe.Prison.CommandHandler(), this);
 	}
 	
 	
 	public static boolean allowPlayerJoin(){return allowPlayerJoin;}
 	public static void setPlayerJoin(boolean value){allowPlayerJoin = value;}
 
-	private boolean setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+	private boolean setupEconomy()
+	{
+        if (getServer().getPluginManager().getPlugin("Vault") == null)
             return false;
-        }
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) {
-            return false;
-        }
+        if (rsp == null) 
+        	return false;
         economy = rsp.getProvider();
         return economy != null;
     }
 	
 
-	public static String getVersion() {
+	public static String getVersion()
+	{
 		return Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
 	}
 	
-
+	private boolean setupCmd()
+	{
+		getCommand("ranks").setExecutor(new uk.co.ElmHoe.Prison.CommandHandler());
+		return true;
+	}
 	
 	
 	/*
@@ -110,13 +122,11 @@ public class HyperPrison extends JavaPlugin implements Listener {
 	
 	public boolean isDatabaseLoaded()
 	{
-		
 		return isDatabaseLoaded;
 	}
 	
 	public boolean isPexLoaded()
 	{
-		
 		return isPexLoaded;
 	}
 	

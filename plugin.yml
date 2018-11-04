@@ -3,4 +3,8 @@ main: uk.co.ElmHoe.Prison.HyperPrison
 version: 0.1
 author: ElmHoe
 load: POSTWORLD
-depend: [PermissionsEx,Vault]
+depend: [Vault]
+commands:
+   ranks:
+      description: This will list all prison ranks from DB
+      usage: /<command> [args]

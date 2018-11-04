@@ -1,5 +1,15 @@
 package uk.co.ElmHoe.Prison;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.entity.Player;
+
+import uk.co.ElmHoe.Prison.Database.*;
+
 public class PlayerRanks {
 
 	/**
@@ -9,7 +19,162 @@ public class PlayerRanks {
 	 * However, with that being said. Ranks will be added and removed but not set to ensure staff/donation ranks are unaffected.
 	 * 
 	 *  Supported Group Managers:
-	 *  - PermissionsEx
-	 *  - GroupManager
+	 *  - LuckyPerm
 	 */
+	
+	/*
+	 * Checks if the player is eligible to rank up 
+	 */
+	public boolean eligibleRankUp(Player p)
+	{
+		//We need to first get the players next rank up.
+		
+		//Then need to calculate the cost to that rankup
+		
+		//Compare against the players current balance
+		return false;
+	}
+	
+	/*
+	 * Sets the players rank to another prison rank
+	 */
+	public void setPlayerRank(Player p)
+	{
+		
+	}
+	
+	/*
+	 *  Gets the current players rank(s)
+	 */
+	public void getPlayerRank(Player p)
+	{
+		
+	}
+	
+	/*
+	 *  Checks if rank X is a prison rank
+	 */
+	public boolean isPrisonRank(String rank)
+	{
+		return false;
+	}
+	
+	/*
+	 *  Lists all prison ranks
+	 */
+	public static List<String> getPrisonRanks()
+	{
+		ResultSet r;
+		List<String> rankList = new ArrayList<String>();
+
+		/*
+ 				preparedStatement = connection.prepareStatement("SELECT PlayerID FROM " + dbName + "." + tableName  +" WHERE PlayerUUID = ?");
+				preparedStatement.setString(1, player.getUniqueId().toString());
+				ResultSet r = preparedStatement.executeQuery();
+		 */
+		PreparedStatement ranks;
+		try {
+			ranks = Database.connection.prepareStatement("SELECT RankName FROM PlayerRanks ORDER BY Priority asc");
+			r = ranks.executeQuery();
+			while (r.next())
+			{
+				rankList.add(r.getString("RankName"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return rankList;
+	}
+	
+	/*
+	 * Gets next rankup rank
+	 */
+	public String getPlayerNextRankupRank(Player p)
+	{
+		ResultSet r;
+		String rank = "";
+
+		/*
+ 				preparedStatement = connection.prepareStatement("SELECT PlayerID FROM " + dbName + "." + tableName  +" WHERE PlayerUUID = ?");
+				preparedStatement.setString(1, player.getUniqueId().toString());
+				ResultSet r = preparedStatement.executeQuery();
+		 */
+		PreparedStatement ranks;
+		try {
+			ranks = Database.connection.prepareStatement(""
+					+ "SELECT RankName FROM PlayerRanks "
+					+ "WHERE "
+						+ "NextRankUp > '0' "
+						+ "AND PlayerRankID = ("
+							+ "SELECT NextRankUp FROM PlayerRanks WHERE PlayerRankID = ("
+							+ "SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)"
+					+ ")");
+			ranks.setString(1, p.getUniqueId().toString());
+			r = ranks.executeQuery();
+			while (r.next())
+			{
+				rank = r.getString("RankName");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return "failed";
+		}
+
+		return rank;
+	}
+	
+	/*
+	 * Gets previous rank
+	 */
+	public String getPlayerPreviousRankupRank(Player p)
+	{
+		
+		return null;
+	}
+	
+	/*
+	 * Creates a prison rankup
+	 */
+
+	/*
+	 * Commented out as ranks will be made in db - not in-game.
+	public boolean createPlayerRankup(String rank, int priority, String permissionGroup, String chatPrefix)
+	{
+		if (Database.isWorking())
+			try
+			{
+				
+				PreparedStatement preparedStatement = Database.connection.prepareStatement("INSERT INTO `hyperprison`.`PlayerRanks` (RankName, Priority, ChatPrefix, PermissionGroup) VALUES (?,?,?,?)");
+				preparedStatement.setString(1, rank);
+				preparedStatement.setInt(2, priority);
+				preparedStatement.setString(3, permissionGroup);
+				preparedStatement.setString(4, chatPrefix);
+				
+				Database.runDatabaseQuery(preparedStatement);
+				return true;
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+				return false;
+			}
+		return false;
+	}
+	*/
+	
+	/*
+	public boolean buildPexRanks()
+	{
+		List<String> prisonRanks = getPrisonRanks();
+		Collection<String> pexGroups = PermissionsEx.getPermissionManager().getGroupNames();
+		for (int i = 0; i < prisonRanks.size(); ++i)
+		{
+			if (pexGroups.contains(prisonRanks.get(i)) == false)
+			{
+
+			}
+		}
+	}
+	*/
 }

@@ -27,12 +27,13 @@ public class PlayerHandler implements Listener{
 	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerJoin(PlayerJoinEvent e)
 	{
-		Database.checkIfFirstJoin(e.getPlayer());
+		if (Database.isWorking())
+			Database.checkIfFirstJoin(e.getPlayer());
 	}
 		
 	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerQuit(PlayerQuitEvent e)
 	{
-	
+		Database.playerLeave(e.getPlayer());
 	}
 }

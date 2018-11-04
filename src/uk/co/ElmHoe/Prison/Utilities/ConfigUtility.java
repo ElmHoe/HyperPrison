@@ -25,11 +25,10 @@ public class ConfigUtility {
 		if (!filesLoaded)
 		{
 			config = new YamlConfiguration();
-			ranks = new YamlConfiguration();
 			File configFile = load(new File(HyperPrison.plugin.getDataFolder(), "config.yml"));
-			File ranksFile = load(new File(HyperPrison.plugin.getDataFolder(), "Ranks.yml"));
 			config.load(configFile);
-			ranks.load(ranksFile);
+			
+			setVariables();
 			return true;
 		}
 		else
@@ -38,6 +37,11 @@ public class ConfigUtility {
 			return false;
 		}
 		
+	}
+	
+	private static void setVariables()
+	{
+		HyperPrison.allowJoinOnNoConnect = config.getBoolean("config.Database.allowJoinOnNoConnect");
 	}
 	
 	private static File load(File fileToLoad){
