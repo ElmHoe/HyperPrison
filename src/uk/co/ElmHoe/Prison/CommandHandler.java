@@ -10,20 +10,10 @@ public class CommandHandler implements Listener, CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args){
 		if (command.getName().equalsIgnoreCase("ranks"))
 		{
-			if (sender.hasPermission("hyperprison.listranks"))
-			{
-				if (args.length == 0)
-				{
+			if (args.length == 0)
+				if (sender.hasPermission("hyperprison.listranks"))
 					sender.sendMessage(PlayerRanks.getPrisonRanks().toString());
-				} else {
-					sender.sendMessage("invalid args length");
-				}
-			} else {
-				sender.sendMessage("No permission");
-			}
 			return true;
-		} else {
-			sender.sendMessage("Invalid Command");	
 		}
 		return true;
 	}

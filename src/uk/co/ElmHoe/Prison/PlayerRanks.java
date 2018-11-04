@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import uk.co.ElmHoe.Prison.Database.*;
@@ -25,29 +26,53 @@ public class PlayerRanks {
 	/*
 	 * Checks if the player is eligible to rank up 
 	 */
-	public boolean eligibleRankUp(Player p)
+	public static boolean eligibleRankUp(Player p)
 	{
-		//We need to first get the players next rank up.
+		int nextRankupCost = getNextRankupCost(p);
+			
+		if (HyperPrison.economy.getBalance(p) >= nextRankupCost)
+			return true;
 		
-		//Then need to calculate the cost to that rankup
-		
-		//Compare against the players current balance
 		return false;
 	}
+	
+	public static boolean doNextRankUp(Player p)
+	{
+		if (eligibleRankUp(p))
+		{
+			
+		}
+		
+		return false;
+	}
+	
 	
 	/*
 	 * Sets the players rank to another prison rank
 	 */
-	public void setPlayerRank(Player p)
+	public static boolean setPlayerRank(Player p, String newRank)
 	{
-		
+		return false;
 	}
 	
 	/*
-	 *  Gets the current players rank(s)
+	 *  Gets the current players rank name
 	 */
-	public void getPlayerRank(Player p)
+	public static String getPlayerRankName(Player p)
 	{
+		PreparedStatement prep;
+		try {
+			prep = Database.connection.prepareStatement("SELECT RankName FROM PlayerRanks WHERE PlayerRankID = (SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)");
+			prep.setString(1, p.getUniqueId().toString());
+			ResultSet results = prep.executeQuery();
+			
+			return results.toString();
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+		}
+		return null;
+		
 		
 	}
 	
@@ -56,6 +81,22 @@ public class PlayerRanks {
 	 */
 	public boolean isPrisonRank(String rank)
 	{
+		PreparedStatement rankToCheck;
+		try
+		{
+			rankToCheck = Database.connection.prepareStatement("SELECT RankName FROM PlayerRanks WHERE RankName = ?");
+			rankToCheck.setString(1, rank);
+			ResultSet result = rankToCheck.executeQuery();
+			if (result.first())
+				return true;
+			else
+				return false;
+		}
+		catch(SQLException e)
+		{
+			Bukkit.getLogger().warning("SQL Issue on isPrisonRank.");
+			e.printStackTrace();
+		}
 		return false;
 	}
 	
@@ -124,15 +165,40 @@ public class PlayerRanks {
 		return rank;
 	}
 	
-	/*
-	 * Gets previous rank
-	 */
-	public String getPlayerPreviousRankupRank(Player p)
+	public static int getNextRankupCost(Player p)
 	{
-		
-		return null;
+		ResultSet r;
+		int rank = 0;
+
+		/*
+ 				preparedStatement = connection.prepareStatement("SELECT PlayerID FROM " + dbName + "." + tableName  +" WHERE PlayerUUID = ?");
+				preparedStatement.setString(1, player.getUniqueId().toString());
+				ResultSet r = preparedStatement.executeQuery();
+		 */
+		PreparedStatement ranks;
+		try {
+			ranks = Database.connection.prepareStatement(""
+					+ "SELECT RankCost FROM PlayerRanks "
+					+ "WHERE "
+						+ "NextRankUp > '0' "
+						+ "AND PlayerRankID = ("
+							+ "SELECT NextRankUp FROM PlayerRanks WHERE PlayerRankID = ("
+							+ "SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)"
+					+ ")");
+			ranks.setString(1, p.getUniqueId().toString());
+			r = ranks.executeQuery();
+			while (r.next())
+			{
+				rank = r.getInt(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+
+		return rank;
 	}
-	
+
 	/*
 	 * Creates a prison rankup
 	 */
@@ -160,21 +226,6 @@ public class PlayerRanks {
 				return false;
 			}
 		return false;
-	}
-	*/
-	
-	/*
-	public boolean buildPexRanks()
-	{
-		List<String> prisonRanks = getPrisonRanks();
-		Collection<String> pexGroups = PermissionsEx.getPermissionManager().getGroupNames();
-		for (int i = 0; i < prisonRanks.size(); ++i)
-		{
-			if (pexGroups.contains(prisonRanks.get(i)) == false)
-			{
-
-			}
-		}
 	}
 	*/
 }

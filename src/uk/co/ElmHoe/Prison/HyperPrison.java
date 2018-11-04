@@ -2,7 +2,6 @@ package uk.co.ElmHoe.Prison;
 
 import java.io.IOException;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -20,15 +19,17 @@ public class HyperPrison extends JavaPlugin implements Listener
 	public String version = "";
 	//public static FileConfiguration config;
 
-	public Economy economy;
-	
+
 	public boolean isVaultLoaded = false;
 	public boolean isPexLoaded = false;
+	public boolean isLuckPermsLoaded = false;
 	public boolean isDatabaseLoaded = false;
-	public static HyperPrison plugin;
-	public static Database database;
 	public static boolean allowPlayerJoin = false;
 	public static boolean allowJoinOnNoConnect;
+
+	public static HyperPrison plugin;
+	public static Database database;
+	public static Economy economy;
 
 	//TODO: Add storage alternatives (YAML/SQL)
 	//NOTE: 
@@ -43,29 +44,32 @@ public class HyperPrison extends JavaPlugin implements Listener
 		Bukkit.getConsoleSender().sendMessage(header + "Running version: " + getVersion());
 		plugin = this;
 		setupCmd();
-		//We attempt to load the config file...
+		
+		
 		try
 		{
 			ConfigUtility.loadConfigurationFiles();
 		} catch (IOException | InvalidConfigurationException e) {
 			e.printStackTrace();
 		}
-		database = new Database();
 		
-		if (getServer().getPluginManager().getPlugin("PermissionsEx") != null)
-		{
+		if (isPexLoaded)
 			isPexLoaded = true;
-		    Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "Detected PermissionsEx!");
-		}
+		
+		if (isLuckPermsLoaded)
+			isLuckPermsLoaded = true;
 		
 		if (!setupEconomy())
-		{
 			isVaultLoaded = false;
-	    	Bukkit.getConsoleSender().sendMessage(header + ChatColor.RED + "Vault not loaded, Using built in economy support!");
-        }else{
-        	isVaultLoaded = true;
-        	Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "Hooked into Vault!");
-        }		
+    	else
+    		isVaultLoaded = true;
+		
+		
+		if (getServer().getPluginManager().getPlugin("") != null)
+			isLuckPermsLoaded = true;
+
+		database = new Database();
+
 	}
 	
 	public void onDisable()
@@ -127,7 +131,22 @@ public class HyperPrison extends JavaPlugin implements Listener
 	
 	public boolean isPexLoaded()
 	{
+		if (isPexLoaded)
+			return isPexLoaded;
+		if (getServer().getPluginManager().getPlugin("PermissionsEx") != null)
+			return isPexLoaded = true;
+		
 		return isPexLoaded;
+	}
+	
+	public boolean isLuckPermsLoaded()
+	{
+		if (isLuckPermsLoaded)
+			return isLuckPermsLoaded;
+		if (getServer().getPluginManager().getPlugin("LuckPerms") != null)
+			return isLuckPermsLoaded = true;
+		
+		return isLuckPermsLoaded;
 	}
 	
 	public boolean isVaultLoaded()
