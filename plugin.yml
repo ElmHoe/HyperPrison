@@ -5,6 +5,7 @@ author: ElmHoe
 load: POSTWORLD
 depend: [Vault]
 commands:
-   ranks:
+   hyperprison:
       description: This will list all prison ranks from DB
       usage: /<command> [args]
+      aliases: [hp,prison]

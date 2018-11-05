@@ -38,7 +38,7 @@ public class Database {
 	{
 		dbName = "hyperprison";
 		tableName = "Players";
-		sqlTemplate = "CREATE TABLE IF NOT EXISTS `Players` (" + 
+		sqlTemplate = "CREATE TABLE IF NOT EXISTS {TABLENAME} (" + 
 				"  `PlayerID` int(11) NOT NULL," + 
 				"  `PlayerUsername` varchar(45) NOT NULL," + 
 				"  `PlayerUUID` varchar(45) NOT NULL," + 
@@ -69,7 +69,7 @@ public class Database {
 				} 
 				else {
 					if(HyperPrison.allowJoinOnNoConnect)
-						HyperPrison.setPlayerJoin(true);
+						HyperPrison.setPlayerJoin(false);
 					
 					Bukkit.getConsoleSender().sendMessage(HyperPrison.header + "MySQL was not able to connect to server!");
 				}

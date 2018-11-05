@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import uk.co.ElmHoe.Prison.Database.*;
+import uk.co.ElmHoe.Prison.Utilities.EconomyUtility;
 
 public class PlayerRanks {
 
@@ -28,8 +29,8 @@ public class PlayerRanks {
 	 */
 	public static boolean eligibleRankUp(Player p)
 	{
-		int nextRankupCost = getNextRankupCost(p);
-			
+		double nextRankupCost = getNextRankupCost(p);
+
 		if (HyperPrison.economy.getBalance(p) >= nextRankupCost)
 			return true;
 		
@@ -38,10 +39,12 @@ public class PlayerRanks {
 	
 	public static boolean doNextRankUp(Player p)
 	{
-		if (eligibleRankUp(p))
-		{
-			
-		}
+		String nextRank = getPlayerNextRankupRank(p);
+		Double nextRankCost = getNextRankupCost(p);
+		p.sendMessage(nextRank + " : " + nextRankCost); 
+		if (EconomyUtility.updatePlayerBalanceWithdraw(p, nextRankCost))
+			if (PermissionHandler.setUserPrimaryGroup(p.getUniqueId(), nextRank))
+				p.sendMessage("You've successfully ranked up to: " + nextRank + "!");
 		
 		return false;
 	}
@@ -65,21 +68,42 @@ public class PlayerRanks {
 			prep = Database.connection.prepareStatement("SELECT RankName FROM PlayerRanks WHERE PlayerRankID = (SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)");
 			prep.setString(1, p.getUniqueId().toString());
 			ResultSet results = prep.executeQuery();
-			
-			return results.toString();
+			while (results.next())
+			{
+				return results.getString("RankName");
+			}
 		} catch (SQLException e) {
 			
 			e.printStackTrace();
 		}
 		return null;
-		
-		
+	}
+	
+	/*
+	 *  Gets the current players display rank name
+	 */
+	public static String getPlayerDisplayRankName(Player p)
+	{
+		PreparedStatement prep;
+		try {
+			prep = Database.connection.prepareStatement("SELECT DisplayRankName FROM PlayerRanks WHERE PlayerRankID = (SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)");
+			prep.setString(1, p.getUniqueId().toString());
+			ResultSet results = prep.executeQuery();
+			while (results.next())
+			{
+				return results.getString("DisplayRankName");
+			}
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	/*
 	 *  Checks if rank X is a prison rank
 	 */
-	public boolean isPrisonRank(String rank)
+	public static boolean isPrisonRank(String rank)
 	{
 		PreparedStatement rankToCheck;
 		try
@@ -129,9 +153,9 @@ public class PlayerRanks {
 	}
 	
 	/*
-	 * Gets next rankup rank
+	 * Gets next rankup rank name
 	 */
-	public String getPlayerNextRankupRank(Player p)
+	public static String getPlayerNextRankupRank(Player p)
 	{
 		ResultSet r;
 		String rank = "";
@@ -161,14 +185,50 @@ public class PlayerRanks {
 			e.printStackTrace();
 			return "failed";
 		}
-
 		return rank;
 	}
 	
-	public static int getNextRankupCost(Player p)
+	/*
+	 * Gets next rankup rank (luck perms)
+	 */
+	public static String getPlayerNextRankupGroup(Player p)
 	{
 		ResultSet r;
-		int rank = 0;
+		String rank = "";
+
+		/*
+ 				preparedStatement = connection.prepareStatement("SELECT PlayerID FROM " + dbName + "." + tableName  +" WHERE PlayerUUID = ?");
+				preparedStatement.setString(1, player.getUniqueId().toString());
+				ResultSet r = preparedStatement.executeQuery();
+		 */
+		PreparedStatement ranks;
+		try {
+			ranks = Database.connection.prepareStatement(""
+					+ "SELECT PermissionGroup FROM PlayerRanks "
+					+ "WHERE "
+						+ "NextRankUp > '0' "
+						+ "AND PlayerRankID = ("
+							+ "SELECT NextRankUp FROM PlayerRanks WHERE PlayerRankID = ("
+							+ "SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)"
+					+ ")");
+			ranks.setString(1, p.getUniqueId().toString());
+			r = ranks.executeQuery();
+			while (r.next())
+			{
+				rank = r.getString("PermissionGroup");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return "failed";
+		}
+		return rank;
+	}
+
+	
+	public static Double getNextRankupCost(Player p)
+	{
+		ResultSet r;
+		double rank = 0;
 
 		/*
  				preparedStatement = connection.prepareStatement("SELECT PlayerID FROM " + dbName + "." + tableName  +" WHERE PlayerUUID = ?");
@@ -193,7 +253,7 @@ public class PlayerRanks {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return -1;
+			return -1.00;
 		}
 
 		return rank;

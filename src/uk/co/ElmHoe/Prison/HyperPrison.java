@@ -21,7 +21,6 @@ public class HyperPrison extends JavaPlugin implements Listener
 
 
 	public boolean isVaultLoaded = false;
-	public boolean isPexLoaded = false;
 	public boolean isLuckPermsLoaded = false;
 	public boolean isDatabaseLoaded = false;
 	public static boolean allowPlayerJoin = false;
@@ -31,12 +30,6 @@ public class HyperPrison extends JavaPlugin implements Listener
 	public static Database database;
 	public static Economy economy;
 
-	//TODO: Add storage alternatives (YAML/SQL)
-	//NOTE: 
-	//     0 = YAML Configuration Files
-	//     1 = MySQL Database
-	public int storageMethod = 0;
-	
 	public void onEnable()
 	{
 		registerAllEvents();
@@ -52,9 +45,6 @@ public class HyperPrison extends JavaPlugin implements Listener
 		} catch (IOException | InvalidConfigurationException e) {
 			e.printStackTrace();
 		}
-		
-		if (isPexLoaded)
-			isPexLoaded = true;
 		
 		if (isLuckPermsLoaded)
 			isLuckPermsLoaded = true;
@@ -111,7 +101,10 @@ public class HyperPrison extends JavaPlugin implements Listener
 	
 	private boolean setupCmd()
 	{
-		getCommand("ranks").setExecutor(new uk.co.ElmHoe.Prison.CommandHandler());
+		getCommand("hyperprison").setExecutor(new uk.co.ElmHoe.Prison.CommandHandler());
+		getCommand("hp").setExecutor(new uk.co.ElmHoe.Prison.CommandHandler());
+		getCommand("prison").setExecutor(new uk.co.ElmHoe.Prison.CommandHandler());
+
 		return true;
 	}
 	
@@ -127,16 +120,6 @@ public class HyperPrison extends JavaPlugin implements Listener
 	public boolean isDatabaseLoaded()
 	{
 		return isDatabaseLoaded;
-	}
-	
-	public boolean isPexLoaded()
-	{
-		if (isPexLoaded)
-			return isPexLoaded;
-		if (getServer().getPluginManager().getPlugin("PermissionsEx") != null)
-			return isPexLoaded = true;
-		
-		return isPexLoaded;
 	}
 	
 	public boolean isLuckPermsLoaded()
