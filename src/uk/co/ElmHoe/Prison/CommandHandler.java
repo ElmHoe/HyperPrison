@@ -8,8 +8,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 
-import me.lucko.luckperms.LuckPerms;
-import me.lucko.luckperms.api.Group;
 import uk.co.ElmHoe.Prison.Utilities.EconomyUtility;
 
 public class CommandHandler implements Listener, CommandExecutor {
@@ -35,36 +33,13 @@ public class CommandHandler implements Listener, CommandExecutor {
 				
 				//List all prison ranks command
 				if (args[0].equalsIgnoreCase("listranks"))
-				{
 					if (sender.hasPermission("hyperprison.listranks"))
-						sender.sendMessage(PlayerRanks.getPrisonRanks().toString());
-				}
-				
-				//TODO: Complete rankup setup, currently ranks straight up - to add a rankup confirm or not?
-				//Allow the player to enter a pending state to confirm their rankup.
-				if (args[0].equalsIgnoreCase("rankup"))
-				{
-					if (sender.hasPermission("hyperprison.rankup"))
-					{
-						String currentRank = PlayerRanks.getPlayerRankName(p);
-						String nextRank = PlayerRanks.getPlayerNextRankupGroup(p);
-						
-						sender.sendMessage("current rank: " + currentRank + " | " + "next rank: " + nextRank);
-						if (PlayerRanks.eligibleRankUp(p))
-							if (PlayerRanks.doNextRankUp(p))
-								sender.sendMessage("ranked up from " + currentRank + " to " + nextRank);
-					}
-				}
+						//sender.sendMessage(PlayerRanks.getPrisonRanks().toString());
 				
 				//Get current rank of player
 				if (args[0].equalsIgnoreCase("rank"))
-				{
 					if (sender.hasPermission("hyperprison.viewrank"))
-					{
-						String currentRank = PlayerRanks.getPlayerDisplayRankName(p);
-						sender.sendMessage("Your current rank is: " + currentRank);
-					}
-				}
+						//sender.sendMessage("Your current rank is: " + currentRank);
 				
 				//Get player balance
 				if (args[0].equalsIgnoreCase("balance") || (args[0].equalsIgnoreCase("bal")))

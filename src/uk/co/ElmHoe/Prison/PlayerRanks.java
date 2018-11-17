@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import uk.co.ElmHoe.Prison.Database.*;
 import uk.co.ElmHoe.Prison.Utilities.EconomyUtility;
 
+@Deprecated
 public class PlayerRanks {
 
 	/**
@@ -27,6 +28,11 @@ public class PlayerRanks {
 	/*
 	 * Checks if the player is eligible to rank up 
 	 */
+	public PlayerRanks get()
+	{
+		return this;
+	}
+	
 	public static boolean eligibleRankUp(Player p)
 	{
 		double nextRankupCost = getNextRankupCost(p);
@@ -39,12 +45,32 @@ public class PlayerRanks {
 	
 	public static boolean doNextRankUp(Player p)
 	{
-		String nextRank = getPlayerNextRankupRank(p);
+		String nextRank = getPlayerNextRankupGroup(p);
 		Double nextRankCost = getNextRankupCost(p);
 		p.sendMessage(nextRank + " : " + nextRankCost); 
 		if (EconomyUtility.updatePlayerBalanceWithdraw(p, nextRankCost))
-			if (PermissionHandler.setUserPrimaryGroup(p.getUniqueId(), nextRank))
-				p.sendMessage("You've successfully ranked up to: " + nextRank + "!");
+		{
+			if (PermissionHandler.setUserGroup(p.getUniqueId(), nextRank))
+			{
+				try {
+					PreparedStatement prepState = Database.connection.prepareStatement(
+							"UPDATE `Players` SET `PlayerRankID` = (SELECT NextRankup FROM PlayerRanks WHERE PlayerRanks.PlayerRankID = Players.PlayerRankID) WHERE PlayerUUID = ?");
+					prepState.setString(1, p.getUniqueId().toString());
+					prepState.executeUpdate();
+					p.sendMessage("You've successfully ranked up to: " + nextRank + "!");
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				Bukkit.getLogger().info("Failed to set perm group on rankup for user: " + p.getName());
+			}
+		} 
+		else 
+		{
+			Bukkit.getLogger().info("Failed to update player balance for player: " + p.getName() + ", amount: " + nextRankCost);	
+		}
 		
 		return false;
 	}
@@ -53,7 +79,7 @@ public class PlayerRanks {
 	/*
 	 * Sets the players rank to another prison rank
 	 */
-	public static boolean setPlayerRank(Player p, String newRank)
+	public boolean setPlayerRank(Player p, String newRank)
 	{
 		return false;
 	}
@@ -103,7 +129,7 @@ public class PlayerRanks {
 	/*
 	 *  Checks if rank X is a prison rank
 	 */
-	public static boolean isPrisonRank(String rank)
+	public boolean isPrisonRank(String rank)
 	{
 		PreparedStatement rankToCheck;
 		try
@@ -155,7 +181,7 @@ public class PlayerRanks {
 	/*
 	 * Gets next rankup rank name
 	 */
-	public static String getPlayerNextRankupRank(Player p)
+	public String getPlayerNextRankupRank(Player p)
 	{
 		ResultSet r;
 		String rank = "";

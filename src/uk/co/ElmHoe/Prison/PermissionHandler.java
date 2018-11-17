@@ -23,20 +23,29 @@ public class PermissionHandler {
 		return LuckPerms.getApi().getUser(uuid).getPrimaryGroup();
 	}
 	
-	//Broken - don't use luke perms ranks
-	public static boolean setUserPrimaryGroup(UUID uuid, String newGroup)
+	public static boolean setUserGroup(UUID uuid, String newGroup)
 	{
+		Group oldGroup = LuckPerms.getApi().getGroup(getUserPrimaryGroup(uuid));
 		User user = LuckPerms.getApi().getUser(uuid);
 		Group group = LuckPerms.getApi().getGroup(newGroup);
-		if (user == null || group == null)
+		if (group == null || oldGroup == null || user == null)
+		{
+			Bukkit.getLogger().warning("Unable to get group, user or their old group, details: " + "\n" + 
+					"UUID: " + uuid.toString() +
+					"newGroup: " + newGroup);
 			return false;
+		}
 		
-		DataMutateResult nextRankup = user.setPermission(LuckPerms.getApi().getNodeFactory().makeGroupNode(group).build());
-		if (!nextRankup.wasSuccess())
+		DataMutateResult changeGroup = user.setPermission(LuckPerms.getApi().getNodeFactory().makeGroupNode(group).build());
+		if (!changeGroup.wasSuccess())
 			return false;
-		else
-			saveUser(user);
-			LuckPerms.getApi().cleanupUser(user);
+
+		DataMutateResult removeOldGroup = user.unsetPermission(LuckPerms.getApi().getNodeFactory().makeGroupNode(oldGroup).build());
+		if (!removeOldGroup.wasSuccess())
+			Bukkit.getLogger().warning("Unable to unset old group from user: " + user.getName() + ", Group: " + oldGroup.getName());
+			
+		saveUser(user);
+		LuckPerms.getApi().cleanupUser(user);
 		
 		return true;
 	}
