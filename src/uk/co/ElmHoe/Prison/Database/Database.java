@@ -77,7 +77,12 @@ public class Database {
 		}, 20);
 	}
 	
-
+	public PlayerData getPlayerGroups(UUID uuid) throws SQLException
+	{
+		PlayerData toReturn = null;
+		
+		return toReturn;
+	}
 	
 	public PlayerData getPlayer(UUID uuid) throws SQLException
 	{

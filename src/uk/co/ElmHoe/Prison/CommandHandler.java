@@ -22,7 +22,7 @@ public class CommandHandler implements Listener, CommandExecutor {
 					sender.sendMessage("help message");
 			}
 			
-			if (args.length >= 1)
+			if (args.length == 1)
 			{
 				//Help command
 				if (args[0].equalsIgnoreCase("help"))
@@ -34,13 +34,16 @@ public class CommandHandler implements Listener, CommandExecutor {
 				//List all prison ranks command
 				if (args[0].equalsIgnoreCase("listranks"))
 					if (sender.hasPermission("hyperprison.listranks"))
-						//sender.sendMessage(PlayerRanks.getPrisonRanks().toString());
+						sender.sendMessage(PlayerRanks.getPrisonRanks().toString());
 				
 				//Get current rank of player
-				if (args[0].equalsIgnoreCase("rank"))
+				if (args[0].equalsIgnoreCase("rank") || (args[0].equalsIgnoreCase("viewrank")))
 					if (sender.hasPermission("hyperprison.viewrank"))
-						//sender.sendMessage("Your current rank is: " + currentRank);
-				
+					{
+						String currentRank = PlayerRanks.getPlayerRankName(p);
+						sender.sendMessage("Your current rank is: " + currentRank);
+					}
+						
 				//Get player balance
 				if (args[0].equalsIgnoreCase("balance") || (args[0].equalsIgnoreCase("bal")))
 				{
@@ -49,6 +52,23 @@ public class CommandHandler implements Listener, CommandExecutor {
 						DecimalFormat formatter = new DecimalFormat("$###,###,###");
 						String outputBal = formatter.format(EconomyUtility.getPlayerBalance(p));
 						sender.sendMessage("Your current balance is: " + outputBal);
+					}
+				}
+				
+				//Rankup current player
+				if (args[0].equalsIgnoreCase("rankup"))
+				{
+					if (sender.hasPermission("hyperprison.rankup"))
+					{
+						if(PlayerRanks.doNextRankUp(p))
+						{
+							String currentRank = PlayerRanks.getPlayerRankName(p);
+							sender.sendMessage("Rankup was a success, your new rank is: " + currentRank);
+						}
+						else
+						{
+							sender.sendMessage("Failed to rankup...");
+						}
 					}
 				}
 			return true;
