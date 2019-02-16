@@ -17,25 +17,27 @@ public class HyperPrison extends JavaPlugin implements Listener
 
 	public static String header = "§7§k|§7§l[§6§lHyper§f§lPrison§7§l]§7§k| §6> ";
 	public String version = "";
-	//public static FileConfiguration config;
 
-
-	public boolean isVaultLoaded = false;
-	public boolean isLuckPermsLoaded = false;
-	public boolean isDatabaseLoaded = false;
-	public static boolean allowPlayerJoin = false;
-	public static boolean allowJoinOnNoConnect;
-
+	public static PlayerHandler playerHandler;
+	public static PermissionHandler permissionHandler;
 	public static HyperPrison plugin;
 	public static Database database;
 	public static Economy economy;
 
+	public static boolean isVaultLoaded = false;
+	public static boolean isLuckPermsLoaded = false;
+	public static boolean isDatabaseLoaded = false;
+	public static boolean allowPlayerJoin = false;
+	public static boolean allowJoinOnNoConnect;
+
+
 	public void onEnable()
 	{
+		Bukkit.getConsoleSender().sendMessage(header + "Running version: " + getVersion());
+		
+		buildInstance();
 		registerAllEvents();
 		allowPlayerJoin = false;
-		Bukkit.getConsoleSender().sendMessage(header + "Running version: " + getVersion());
-		plugin = this;
 		setupCmd();
 		
 		
@@ -49,17 +51,20 @@ public class HyperPrison extends JavaPlugin implements Listener
 		if (isLuckPermsLoaded)
 			isLuckPermsLoaded = true;
 		
-		if (!setupEconomy())
-			isVaultLoaded = false;
-    	else
+		if (setupEconomy())
     		isVaultLoaded = true;
 		
-		
-		if (getServer().getPluginManager().getPlugin("") != null)
+		if (getServer().getPluginManager().getPlugin("LuckPerms") != null)
 			isLuckPermsLoaded = true;
-
+	}
+	
+	public boolean buildInstance()
+	{
+		plugin = this;
+		playerHandler = new PlayerHandler();
+		permissionHandler = new PermissionHandler();
 		database = new Database();
-
+		return true;
 	}
 	
 	public void onDisable()

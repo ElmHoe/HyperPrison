@@ -25,7 +25,19 @@ public class PlayerRanks {
 	 */
 	
 	/*
-	 * Checks if the player is eligible to rank up 
+	 * ------------------------------------
+	 * Checks if the player is eligible to rank up
+	 * ------------------------------------ 
+	 */
+	public PlayerRanks get()
+	{
+		return this;
+	}
+	
+	/*
+	 * ------------------------------------
+	 * Checks if the player is eligible for the next rankup
+	 * ------------------------------------
 	 */
 	public static boolean eligibleRankUp(Player p)
 	{
@@ -37,29 +49,62 @@ public class PlayerRanks {
 		return false;
 	}
 	
+	/*
+	 * ------------------------------------
+	 * Ranks the player up 
+	 * ------------------------------------
+	 */
 	public static boolean doNextRankUp(Player p)
 	{
-		String nextRank = getPlayerNextRankupRank(p);
+		String nextRank = getPlayerNextRankupGroup(p);
 		Double nextRankCost = getNextRankupCost(p);
 		p.sendMessage(nextRank + " : " + nextRankCost); 
-		if (EconomyUtility.updatePlayerBalanceWithdraw(p, nextRankCost))
-			if (PermissionHandler.setUserPrimaryGroup(p.getUniqueId(), nextRank))
-				p.sendMessage("You've successfully ranked up to: " + nextRank + "!");
+		if (eligibleRankUp(p) && EconomyUtility.updatePlayerBalanceWithdraw(p, nextRankCost))
+		{
+			if (PermissionHandler.setUserGroup(p.getUniqueId(), nextRank))
+			{
+				try {
+					PreparedStatement prepState = Database.connection.prepareStatement(
+							"UPDATE `Players` SET `PlayerRankID` = (SELECT NextRankup FROM PlayerRanks WHERE PlayerRanks.PlayerRankID = Players.PlayerRankID) WHERE PlayerUUID = ?");
+					prepState.setString(1, p.getUniqueId().toString());
+					prepState.executeUpdate();
+					p.sendMessage("You've successfully ranked up to: " + nextRank + "!");
+					return true;
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			else
+				Bukkit.getLogger().info("Failed to set perm group on rankup for user: " + p.getName());
+		} 
+		else 
+		{	
+			if (eligibleRankUp(p))
+				p.sendMessage("You do not have the funds to rankup.");
+			else if (EconomyUtility.updatePlayerBalanceWithdraw(p, nextRankCost))
+				Bukkit.getLogger().info("EncomotyUtility failure after passing validation for player: " + p.getName() + ", next rank cost: " + nextRankCost + ".");
+			else
+				Bukkit.getLogger().info("This should have never happened.... doNextRankup()");
 		
+		}
 		return false;
 	}
 	
 	
-	/*
+	/* 
+	 * ------------------------------------
 	 * Sets the players rank to another prison rank
-	 */
-	public static boolean setPlayerRank(Player p, String newRank)
+	 * ------------------------------------
+	 */ 
+	public boolean setPlayerRank(Player p, String newRank)
 	{
 		return false;
 	}
 	
 	/*
+	 * ------------------------------------
 	 *  Gets the current players rank name
+	 * ------------------------------------
 	 */
 	public static String getPlayerRankName(Player p)
 	{
@@ -80,7 +125,9 @@ public class PlayerRanks {
 	}
 	
 	/*
+	 * ------------------------------------
 	 *  Gets the current players display rank name
+	 * ------------------------------------
 	 */
 	public static String getPlayerDisplayRankName(Player p)
 	{
@@ -94,16 +141,17 @@ public class PlayerRanks {
 				return results.getString("DisplayRankName");
 			}
 		} catch (SQLException e) {
-			
 			e.printStackTrace();
 		}
 		return null;
 	}
 	
 	/*
+	 * ------------------------------------
 	 *  Checks if rank X is a prison rank
+	 * ------------------------------------
 	 */
-	public static boolean isPrisonRank(String rank)
+	public boolean isPrisonRank(String rank)
 	{
 		PreparedStatement rankToCheck;
 		try
@@ -118,14 +166,15 @@ public class PlayerRanks {
 		}
 		catch(SQLException e)
 		{
-			Bukkit.getLogger().warning("SQL Issue on isPrisonRank.");
 			e.printStackTrace();
 		}
 		return false;
 	}
 	
 	/*
+	 * ------------------------------------
 	 *  Lists all prison ranks
+	 * ------------------------------------
 	 */
 	public static List<String> getPrisonRanks()
 	{
@@ -147,15 +196,18 @@ public class PlayerRanks {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+			return null;
 		}
 
 		return rankList;
 	}
 	
 	/*
+	 * ------------------------------------
 	 * Gets next rankup rank name
+	 * ------------------------------------
 	 */
-	public static String getPlayerNextRankupRank(Player p)
+	public String getPlayerNextRankupRank(Player p)
 	{
 		ResultSet r;
 		String rank = "";
@@ -183,13 +235,15 @@ public class PlayerRanks {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return "failed";
+			return null;
 		}
 		return rank;
 	}
 	
 	/*
+	 * ------------------------------------
 	 * Gets next rankup rank (luck perms)
+	 * ------------------------------------
 	 */
 	public static String getPlayerNextRankupGroup(Player p)
 	{
@@ -219,12 +273,16 @@ public class PlayerRanks {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return "failed";
+			return null;
 		}
 		return rank;
 	}
 
-	
+	/*
+	 * ------------------------------------
+	 * gets the cost for the players next rankup
+	 * ------------------------------------
+	 */
 	public static Double getNextRankupCost(Player p)
 	{
 		ResultSet r;
@@ -249,7 +307,7 @@ public class PlayerRanks {
 			r = ranks.executeQuery();
 			while (r.next())
 			{
-				rank = r.getInt(1);
+				rank = r.getDouble(1);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -265,6 +323,7 @@ public class PlayerRanks {
 
 	/*
 	 * Commented out as ranks will be made in db - not in-game.
+	 * It would be good to get this available in-game and mess around with priorities / setting next rankup tracks
 	public boolean createPlayerRankup(String rank, int priority, String permissionGroup, String chatPrefix)
 	{
 		if (Database.isWorking())

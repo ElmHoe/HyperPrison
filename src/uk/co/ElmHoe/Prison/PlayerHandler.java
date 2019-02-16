@@ -12,7 +12,11 @@ import uk.co.ElmHoe.Prison.Database.Database;
 
 public class PlayerHandler implements Listener{
 
-	
+	/**
+	 * @author Joshua Fennell
+	 * 
+	 * This will run a series of code when the player logs into the server.
+	 **/
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerLogin(PlayerLoginEvent e)
 	{
