@@ -58,31 +58,36 @@ public class PlayerRanks {
 	{
 		String nextRank = getPlayerNextRankupGroup(p);
 		Double nextRankCost = getNextRankupCost(p);
-		p.sendMessage(nextRank + " : " + nextRankCost); 
-		if (eligibleRankUp(p) && EconomyUtility.updatePlayerBalanceWithdraw(p, nextRankCost))
+		if (eligibleRankUp(p))
 		{
-			if (PermissionHandler.setUserGroup(p.getUniqueId(), nextRank))
+			if (EconomyUtility.updatePlayerBalanceWithdraw(p, nextRankCost))
 			{
-				try {
-					PreparedStatement prepState = Database.connection.prepareStatement(
-							"UPDATE `Players` SET `PlayerRankID` = (SELECT NextRankup FROM PlayerRanks WHERE PlayerRanks.PlayerRankID = Players.PlayerRankID) WHERE PlayerUUID = ?");
-					prepState.setString(1, p.getUniqueId().toString());
-					prepState.executeUpdate();
-					p.sendMessage("You've successfully ranked up to: " + nextRank + "!");
-					return true;
-				} catch (SQLException e) {
-					e.printStackTrace();
+				if (PermissionHandler.setUserGroup(p.getUniqueId(), nextRank))
+				{
+					try {
+						String sql = "UPDATE `PlayerData` SET `PlayerRankID` = (SELECT NextRankup FROM PlayerRanks WHERE PlayerRanks.PlayerRankID = PlayerData.PlayerRankID) WHERE PlayerUUID = ?";
+
+						PreparedStatement prepState = Database.connection.prepareStatement(sql);
+						prepState.setString(1, p.getUniqueId().toString());
+						prepState.executeUpdate();
+						p.sendMessage("You've successfully ranked up to: " + nextRank + "!");
+						return true;
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
 				}
-			}
+				else
+					Bukkit.getLogger().info("Failed to set perm group on rankup for user: " + p.getName());
+			} 
 			else
-				Bukkit.getLogger().info("Failed to set perm group on rankup for user: " + p.getName());
+			{
+				Bukkit.getLogger().info("EncomotyUtility failure after passing validation for player: " + p.getName() + ", next rank cost: " + nextRankCost + ".");
+			}
 		} 
 		else 
 		{	
-			if (eligibleRankUp(p))
+			if (!eligibleRankUp(p))
 				p.sendMessage("You do not have the funds to rankup.");
-			else if (EconomyUtility.updatePlayerBalanceWithdraw(p, nextRankCost))
-				Bukkit.getLogger().info("EncomotyUtility failure after passing validation for player: " + p.getName() + ", next rank cost: " + nextRankCost + ".");
 			else
 				Bukkit.getLogger().info("This should have never happened.... doNextRankup()");
 		
@@ -110,7 +115,9 @@ public class PlayerRanks {
 	{
 		PreparedStatement prep;
 		try {
-			prep = Database.connection.prepareStatement("SELECT RankName FROM PlayerRanks WHERE PlayerRankID = (SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)");
+			String sql = "SELECT RankName FROM PlayerRanks WHERE PlayerRankID = (SELECT PlayerRankID FROM PlayerData WHERE PlayerUUID = ?)";
+
+			prep = Database.connection.prepareStatement(sql);
 			prep.setString(1, p.getUniqueId().toString());
 			ResultSet results = prep.executeQuery();
 			while (results.next())
@@ -133,7 +140,9 @@ public class PlayerRanks {
 	{
 		PreparedStatement prep;
 		try {
-			prep = Database.connection.prepareStatement("SELECT DisplayRankName FROM PlayerRanks WHERE PlayerRankID = (SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)");
+			String sql = "SELECT DisplayRankName FROM PlayerRanks WHERE PlayerRankID = (SELECT PlayerRankID FROM {PlayerDataTableName} WHERE PlayerUUID = ?)";
+
+			prep = Database.connection.prepareStatement(sql);
 			prep.setString(1, p.getUniqueId().toString());
 			ResultSet results = prep.executeQuery();
 			while (results.next())
@@ -156,8 +165,11 @@ public class PlayerRanks {
 		PreparedStatement rankToCheck;
 		try
 		{
-			rankToCheck = Database.connection.prepareStatement("SELECT RankName FROM PlayerRanks WHERE RankName = ?");
-			rankToCheck.setString(1, rank);
+			String sql = "SELECT RankName FROM PlayerRanks WHERE RankName = ?"; 
+
+			rankToCheck = Database.connection.prepareStatement(sql);
+			rankToCheck.setString(1, Database.playerRanksTableName);
+			rankToCheck.setString(2, rank);
 			ResultSet result = rankToCheck.executeQuery();
 			if (result.first())
 				return true;
@@ -188,7 +200,9 @@ public class PlayerRanks {
 		 */
 		PreparedStatement ranks;
 		try {
-			ranks = Database.connection.prepareStatement("SELECT RankName FROM PlayerRanks ORDER BY Priority asc");
+			String sql = "SELECT RankName FROM PlayerRanks ORDER BY Priority asc";
+
+			ranks = Database.connection.prepareStatement(sql);
 			r = ranks.executeQuery();
 			while (r.next())
 			{
@@ -219,14 +233,16 @@ public class PlayerRanks {
 		 */
 		PreparedStatement ranks;
 		try {
-			ranks = Database.connection.prepareStatement(""
-					+ "SELECT RankName FROM PlayerRanks "
+			String sql = 
+					"SELECT RankName FROM PlayerRanks "
 					+ "WHERE "
 						+ "NextRankUp > '0' "
 						+ "AND PlayerRankID = ("
 							+ "SELECT NextRankUp FROM PlayerRanks WHERE PlayerRankID = ("
-							+ "SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)"
-					+ ")");
+							+ "SELECT PlayerRankID FROM PlayerData WHERE PlayerUUID = ?)"
+					+ ")";
+
+			ranks = Database.connection.prepareStatement(sql);
 			ranks.setString(1, p.getUniqueId().toString());
 			r = ranks.executeQuery();
 			while (r.next())
@@ -257,14 +273,16 @@ public class PlayerRanks {
 		 */
 		PreparedStatement ranks;
 		try {
-			ranks = Database.connection.prepareStatement(""
+			String sql = ""
 					+ "SELECT PermissionGroup FROM PlayerRanks "
 					+ "WHERE "
 						+ "NextRankUp > '0' "
 						+ "AND PlayerRankID = ("
 							+ "SELECT NextRankUp FROM PlayerRanks WHERE PlayerRankID = ("
-							+ "SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)"
-					+ ")");
+							+ "SELECT PlayerRankID FROM PlayerData WHERE PlayerUUID = ?)"
+					+ ")";
+
+			ranks = Database.connection.prepareStatement(sql);
 			ranks.setString(1, p.getUniqueId().toString());
 			r = ranks.executeQuery();
 			while (r.next())
@@ -295,14 +313,16 @@ public class PlayerRanks {
 		 */
 		PreparedStatement ranks;
 		try {
-			ranks = Database.connection.prepareStatement(""
+			String sql = ""
 					+ "SELECT RankCost FROM PlayerRanks "
 					+ "WHERE "
 						+ "NextRankUp > '0' "
 						+ "AND PlayerRankID = ("
 							+ "SELECT NextRankUp FROM PlayerRanks WHERE PlayerRankID = ("
-							+ "SELECT PlayerRankID FROM Players WHERE PlayerUUID = ?)"
-					+ ")");
+							+ "SELECT PlayerRankID FROM PlayerData WHERE PlayerUUID = ?)"
+					+ ")";
+			
+			ranks = Database.connection.prepareStatement(sql);
 			ranks.setString(1, p.getUniqueId().toString());
 			r = ranks.executeQuery();
 			while (r.next())

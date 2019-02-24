@@ -24,32 +24,57 @@ public class Database {
 	public static Connection connection = null;
 	
 	private static String dbName;
-	private static String tableName;
 	private static String url;
 	private static String user;
 	private static String password;
 	private List<String> columns;
 	private static boolean connected;
-	private static String sql;
-	private static String sqlTemplate;
 	public static Database plugin;
+
+	//Player Data default table setup
+	private static String playerDataSQL;
+	public static String playerDataTableName;
+	private static String playerDateTableTemplate;
+
+	//Player Data default table setup
+	private static String playerRanksSQL;
+	public static String playerRanksTableName;
+	private static String playerRanksTableTemplate;
+
 
 	public Database()
 	{
 		dbName = "hyperprison";
-		tableName = "Players";
-		sqlTemplate = "CREATE TABLE IF NOT EXISTS {TABLENAME} (" + 
-				"  `PlayerID` int(11) NOT NULL," + 
+		playerDataTableName = "PlayerData";
+		playerDateTableTemplate = "CREATE TABLE IF NOT EXISTS {TABLENAME} (" + 
+				"  `PlayerID` int(11) NOT NULL AUTO_INCREMENT," + 
 				"  `PlayerUsername` varchar(45) NOT NULL," + 
 				"  `PlayerUUID` varchar(45) NOT NULL," + 
-				"  `JoinDateTime` datetime DEFAULT CURRENT_TIMESTAMP," + 
+				"  `PlayerJoinCount` int(11) NOT NULL," + 
+				"  `FirstSeenDateTime` datetime DEFAULT CURRENT_TIMESTAMP," + 
 				"  `LastSeenDateTime` datetime DEFAULT CURRENT_TIMESTAMP," + 
-				"  PRIMARY KEY (`PlayerID`)," + 
+				"  `PlayerRankID` tinyint(3) NOT NULL DEFAULT '1'," + 
+				"  PRIMARY KEY (`PlayerID`,`PlayerUUID`)," + 
 				"  UNIQUE KEY `PlayerID_UNIQUE` (`PlayerID`)," + 
 				"  UNIQUE KEY `idx_Players_PlayerUsername` (`PlayerUsername`)," + 
 				"  KEY `idx_Players_PlayerUUID` (`PlayerUUID`)" + 
-				") ENGINE=InnoDB DEFAULT CHARSET=latin1;";
+				") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
+		
+		playerRanksTableName = "PlayerRanks";
+		playerRanksTableTemplate = "CREATE TABLE IF NOT EXISTS {TABLENAME} (" + 
+				"  `PlayerRankID` int(11) NOT NULL AUTO_INCREMENT," + 
+				"  `RankName` varchar(45) NOT NULL," + 
+				"  `Priority` varchar(45) NOT NULL," + 
+				"  `ChatPrefix` varchar(45) NOT NULL," + 
+				"  `PermissionGroup` varchar(45) NOT NULL," + 
+				"  `NextRankup` tinyint(3) NOT NULL," + 
+				"  `RankCost` double NOT NULL DEFAULT '0'," + 
+				"  `DisplayRankName` varchar(45) NOT NULL," + 
+				"  PRIMARY KEY (`PlayerRankID`,`RankName`)," + 
+				"  UNIQUE KEY `RankName_UNIQUE` (`RankName`)," + 
+				"  UNIQUE KEY `Priority_UNIQUE` (`Priority`)" + 
+				") ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8;";
 		
 			Bukkit.getScheduler().runTaskLaterAsynchronously(HyperPrison.plugin, new Runnable()
 			{
@@ -89,7 +114,7 @@ public class Database {
 		PlayerData toReturn = null;
 		if(isWorking())
 		{
-			PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + tableName + " WHERE uuid=?");
+			PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + playerDataTableName + " WHERE uuid=?");
 			preparedStatement.setString(1, uuid.toString());
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while(resultSet.next())
@@ -112,7 +137,7 @@ public class Database {
 		PlayerData toReturn = null;
 		if(isWorking())
 		{
-			PreparedStatement preparedStatement = connection.prepareStatement("select * from " + tableName + " where PlayerUUID=?");
+			PreparedStatement preparedStatement = connection.prepareStatement("select * from " + playerDataTableName + " where PlayerUUID=?");
 			preparedStatement.setString(1,player.getUniqueId().toString());
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while(resultSet.next())
@@ -135,18 +160,25 @@ public class Database {
 	{
 		boolean worked = true;
 		dbName = ConfigUtility.config.getString("config.Database.databaseName");
-		tableName = ConfigUtility.config.getString("config.Database.tableName");
+		playerDataTableName = ConfigUtility.config.getString("config.Database.tableName");
 		user = ConfigUtility.config.getString("config.Database.username");
 		password = ConfigUtility.config.getString("config.Database.password");
 		url = ConfigUtility.config.getString("config.Database.server");	
-		sql = sqlTemplate.replace("{TABLENAME}", "" + tableName);
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			connection = DriverManager.getConnection(url, user, password);
 			Statement statement = connection.createStatement();
+			Bukkit.getLogger().info("Creating default Database: " + dbName);
 			PreparedStatement preparedStatement = connection.prepareStatement("CREATE DATABASE IF NOT EXISTS " + dbName + ";");
 			preparedStatement.executeUpdate();
-			statement.executeUpdate(sql);
+			Bukkit.getLogger().info("Creating default Players Data table: " + playerDataTableName);
+			playerDataSQL = playerDateTableTemplate.replace("{TABLENAME}", "" + playerDataTableName);
+			Bukkit.getLogger().info("Creating default Player Ranks table: " + playerRanksTableName);
+			playerRanksSQL = playerRanksTableTemplate.replace("{TABLENAME}", "" + playerRanksTableName);
+
+			statement.executeUpdate(playerDataSQL);			
+			statement.executeUpdate(playerRanksSQL);
+			
 			preparedStatement.close();
 			statement.close();
 		} catch (SQLException | ClassNotFoundException e) {
@@ -240,7 +272,7 @@ public class Database {
 			PreparedStatement preparedStatement = null;
 			try
 			{
-				preparedStatement =  connection.prepareStatement("insert into  " + dbName + "." + tableName 
+				preparedStatement =  connection.prepareStatement("insert into  " + dbName + "." + playerDataTableName 
 						+ " (PlayerUsername,PlayerUUID,PlayerJoinCount) "
 						+ " values " + 
 						"(?,?,?)"
@@ -265,7 +297,7 @@ public class Database {
 			
 			try
 			{
-				preparedStatement = connection.prepareStatement("SELECT PlayerID FROM " + dbName + "." + tableName  +" WHERE PlayerUUID = ?");
+				preparedStatement = connection.prepareStatement("SELECT PlayerID FROM " + dbName + "." + playerDataTableName  +" WHERE PlayerUUID = ?");
 				preparedStatement.setString(1, player.getUniqueId().toString());
 				ResultSet r = preparedStatement.executeQuery();
 
@@ -287,9 +319,9 @@ public class Database {
 			PreparedStatement preparedStatement = null;
 			try {
 				preparedStatement =  connection.prepareStatement(
-						"UPDATE  " + dbName + "." + tableName 
+						"UPDATE  " + dbName + "." + playerDataTableName 
 						+ " SET PlayerUsername = ?,"
-						+ "PlayerLastSeenDateTime = NOW(),"
+						+ "LastSeenDateTime = NOW(),"
 						+ "PlayerJoinCount = ((SELECT PlayerJoinCount WHERE PlayerUUID = ?)+1)"
 						+ "WHERE PlayerUUID = ?;"
 						);

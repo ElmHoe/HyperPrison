@@ -3,3 +3,4 @@ config.yml
 .settings/
 .classpath
 .project
+target/*
